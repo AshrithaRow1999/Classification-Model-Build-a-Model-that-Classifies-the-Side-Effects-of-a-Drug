@@ -1,0 +1,102 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report
+
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("drugeffects.csv").drop(columns=['Unnamed: 0'])
+df.head()
+
+df.shape
+
+df.columns
+
+df.isnull().sum()
+
+df[df.isnull().any(axis=1)]
+
+df['condition'].value_counts()
+
+#get the top 15 medical conditions
+df['condition'].value_counts().head(15).plot(kind='bar')
+plt.xlabel('condition')
+plt.show()
+
+#representation of effectiveness
+df['effectiveness'].value_counts().head(15).plot(kind='bar')
+plt.xlabel('effectiveness')
+plt.show()
+
+#top 15 drugs
+df['urlDrugName'].value_counts().head(15).plot(kind='bar')
+plt.xlabel('rating')
+plt.show()
+
+#rating of drugs(high effective, low side effects)
+df['rating'].value_counts().head(15).plot(kind='bar')
+plt.xlabel('rating')
+plt.show()
+
+df['effectiveness'].value_counts().plot(kind='pie')
+plt.show()
+
+# top 10 diseases
+df['condition'].value_counts().head(10).plot(kind='bar')
+plt.xlabel('condition')
+plt.show()
+
+df['condition'].value_counts()
+
+#seperating features(train) and labels(predict)
+target = df.pop('sideEffects')
+df.head()
+
+#categorical values to numeric values
+cols = ['urlDrugName','effectiveness','condition']
+for x in cols:
+    df[x] = pd.factorize(df[x])[0]
+target = pd.factorize(target)[0]
+df.head()
+
+#scaling (min max, average scaler)
+scaler=StandardScaler()
+df = scaler.fit_transform(df)
+df
+
+#splitting data into train and validations
+x_train, x_test, y_train, y_test = train_test_split(df, target,
+test_size=.3)
+
+# using svm
+svm_clf = SVC().fit(x_train,y_train)
+svm_pred = svm_clf.predict(x_test)
+print(classification_report(y_test,svm_pred))
+
+#using random forest(stability)
+rf_clf = RandomForestClassifier().fit(x_train, y_train)
+rf_pred = rf_clf.predict(x_test)
+print(classification_report(y_test,rf_pred))
+
+from sklearn.naive_bayes import GaussianNB
+classifier = GaussianNB()
+classifier.fit(x_train,y_train)
+y_pred = classifier.predict(x_test)
+from sklearn.metrics import confusion_matrix, accuracy_score
+ac = accuracy_score(y_test, y_pred)
+print("accuracy", ac)
+print(classification_report(y_test,y_pred))
+
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression()
+lr.fit(x_train,y_train)
+lr.predict(x_test[0].reshape(1,-1))
+lr.predict(x_test[0:10])
+predictions = lr.predict(x_test)
+score = lr.score(x_test, y_test)
+print(score)
+print(classification_report(y_test,predictions))
